@@ -1,0 +1,9 @@
+# Configuration file for R scripts.
+default:
+  proj_path: /project/higgslab/mjenning/proj/hay2016_emulation_20240604
+  model_dir: ter119_APH_spleen
+  analysis_dir: ana_1
+  mcov_file:
+    - mbws_ATAC.tab
+    - mbws_histone.tab
+    - mbws_cf.tab

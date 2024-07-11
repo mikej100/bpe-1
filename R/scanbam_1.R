@@ -3,6 +3,11 @@ library(stringr)
 #library(rtracklayer)
 #TODO try megadepth library
 
+################################################################################
+#                                                                              #
+#           This code is not yet implemented.                                  #
+#                                                                              #
+################################################################################
 cfg <- list(
     "proj_dir" = "/project/higgslab/mjenning/proj/hay2016_emulation_20240604",
     "model" = c("ATAC", "H3K4me1", "H3K4me3", "Med1")

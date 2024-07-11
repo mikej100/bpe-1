@@ -1,66 +1,100 @@
 library(dplyr)
 library(ggplot2)
 library(GenomicRanges)
-library(purrr)
 library(mclust)
 library(purrr)
 library(readr)
 library(stringr)
 
-options(bitmapType='cairo')
+# set purrr::map as default map
+map <- purrr::map
+################################################################################
+#                                                                              #
+#           Inspect multiBigWigSummary results                                 #
+#                                                                              #
+#  Processes results from multiBigWigSummary runs.                             #
+#  Takes results from multiple .tab output file and binds the columns, keepingp#
+#  the first three columns (chr, start and end) of the first set. So the       #
+#  data sets need to have been generated from corresponding versions of a      #
+#  bed file.                                                                   #
+################################################################################
+################################################################################
+#           Configuration                                                      #
+################################################################################
+# Get the analysis directory and other configuration from config.yml
+cfg <- config::get()
+# For graphical rendition, setting for molbiol.ox.ac.uk.
+Options(bitmapType='cairo')
 
-cfg <- list(
-    analysis_dir = str_glue(
-        "{Sys.getenv('PROJ')}/hay2016_emulation_20240604/ana_1"
-        ),
-    mcov_file = list(
-        "mbws_ATAC.tab",
-        "mbws_H3K4me1_3.tab",
-        "mbws_cf.tab"
-    )
-)
+################################################################################
+#                                                                              #
+#           Assimilate the data                                                #
+#                                                                              #
+################################################################################
 # read the raw multicov files and combine
+analysis_path <- file.path(cfg$proj_path, cfg$model_dir, cfg$analysis_dir)
+
 mc_raw <- cfg$mcov_file |>
     map(\(f)
-      read_tsv(file.path(cfg$analysis_dir, f))
+      read_tsv(file.path(analysis_path, f))
         ) |>
     bind_cols()
 
 # Strip wrapper of quotations from the names, and the hash
+# and remove '...<1, 2  or 3>' so can keep first 
+# set of names as 'chr', 'start' and 'end'
 mc_names <- names(mc_raw) |>
     map(\(n) str_replace_all(n, "'", "") ) |>
-    map(\(n) str_replace(n, "#", "" ))
-
+    map(\(n) str_replace(n, "#", "" )) |>
+    map(\(n) str_replace(n, "\\.\\.\\.[123]$", "" ))
+# check names look correct.
 mc_names
 
+# Set the new names and drop redundant chr, start and end columns
 mc <- mc_raw |>
     setNames(mc_names) |>
     select( !contains("..."))
 nrow(mc)
 
-report <- function (x, message) {
+################################################################################
+#                                                                              #
+#           Processing stream                                                  #
+#                                                                              #
+################################################################################
+# A function to report the count and pass value back to the pipe stream
+report <- function(x, message) {
     print(str_glue("{count(x)}: {message}."))
-    return (x)
+    return(x)
 }
 
+# filter the data according to some rules, counting the rows at each step.
 mc_filtered <- mc |>
     report("Initial count") |>
-    filter (!(H3K4me1 < 10 & H3K4me3 < 10)) |>
-    report("low H3K4Me removed") |>
-    mutate(me_ratio= H3K4me3/H3K4me1) |>
-    filter (me_ratio < 1) |>
-    report("me3/me1 < 1 kept") |>
-    
+    filter(!(H3K4me1 < 10 & H3K4me3 < 10)) |>
+    report("low H3K4Me count removed") |>
+    mutate(me_ratio = H3K4me3 / H3K4me1) |>
+    filter(me_ratio < 1) |>
+    report("me3/me1 count ration < 1 kept")
 
 
-
+# Peek at the data
 summary(mc)
-
-sample( mc$ATAC, 10)
-pmin(1, log10(mc$ATAC[3:5] - 100))
-ggplot(mc, aes(x = log10(med1_1))) +
-    geom_density() 
+################################################################################
+#                                                                              #
+#           Write data                                                         #
+#                                                                              #
+################################################################################
+# Write data to the analysis directory. 
+write_tsv(
+    mc_filtered,
+    file.path(analysis_path, "consolidated_multicov.tsv")
+)
+#
+# Starting to explore the data ... 
+#sample( mc$ATAC, 10)
+#pmin(1, log10(mc$ATAC[3:5] - 100))
+## ggplot(mc, aes(x = log10(med1_1))) +
+#     geom_density() 
     
 
-plot(density(mc$))
 
