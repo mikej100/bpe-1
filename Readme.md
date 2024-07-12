@@ -25,8 +25,11 @@ For example `/project/<group>/<user>/dev/bpe-1_20240605
 ```
 /project/<group>/<user>/dev/
 ├── bpe-1_20240605
-│   ├── bpe-1
-│   │   └── R
+│   └── bpe-1
+│       ├── config.yml
+│       └── R
+
+
 ```
 
 In `config.yml` configure the directory where the analysis input and output data resides. This is structured to be consistent with the Chipseq and multibw pipelines where there is a project directory, a subdirectory for tissue type and subdirectories of that for assay data and data analysis (see 
