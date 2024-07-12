@@ -47,10 +47,6 @@ default:
     - mbws_cf.tab
 ```
 
-Clone this repository into a folder such as `/project/<group>/<user>/dev/pipelines`
-
-`cd` to the directory created
-
 Create conda environment
 
     mamba env create environment.yml 
@@ -71,3 +67,4 @@ source ~/.env
 load_mamba
 mamba activate bpe_env
 ```
+Run the R script, for example in VS Code.
