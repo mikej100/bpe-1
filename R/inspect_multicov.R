@@ -1,6 +1,6 @@
 library(dplyr)
 library(ggplot2)
-library(GenomicRanges)
+# library(GenomicRanges)
 library(mclust)
 library(purrr)
 library(readr)
@@ -68,11 +68,15 @@ report <- function(x, message) {
 }
 
 # filter the data according to some rules, counting the rows at each step.
+lower_limit = 50
+mc_augmented <- mc |>
+    filter((H3K4me1 >= lower_limit & H3K4me3 >= lower_limit) ) |>
+    mutate(me_ratio = H3K4me3 / H3K4me1) 
+# filter the data according to some rules, counting the rows at each step.
 mc_filtered <- mc |>
     report("Initial count") |>
     filter(!(H3K4me1 < 10 & H3K4me3 < 10)) |>
     report("low H3K4Me count removed") |>
-    mutate(me_ratio = H3K4me3 / H3K4me1) |>
     filter(me_ratio < 1) |>
     report("me3/me1 count ration < 1 kept")
 
@@ -90,11 +94,38 @@ write_tsv(
     file.path(analysis_path, "consolidated_multicov.tsv")
 )
 #
-# Starting to explore the data ... 
-#sample( mc$ATAC, 10)
-#pmin(1, log10(mc$ATAC[3:5] - 100))
-## ggplot(mc, aes(x = log10(med1_1))) +
-#     geom_density() 
-    
+################################################################################
+#                                                                              #
+#          Density estimation                                                  # 
+#                                                                              #
+################################################################################
+dens <- densityMclust(mc_augmented$me_ratio)
+summary(dens, parameters = TRUE)
+#
+################################################################################
+#                                                                              #
+#          Pair plot                                                           # 
+#                                                                              #
+################################################################################
+n = 200
+clPairs( sample_n(mc_filtered, n)[ , -(1:3)]) 
+mod <- Mclust( sample_n(mc_filtered, n)[ ,-(1:3)]) 
+summary(mod, parameters = TRUE)
+n = 500
+dat <- sample_n(mc_filtered, n)[ , 'ATAC']
+clPairs( dat )
+mod <- Mclust( dat )
+summary(mod, parameters = TRUE)
+#
+################################################################################
+#                                                                              #
+#          Clustering                                                          # 
+#                                                                              #
+################################################################################
+mod <- Mclust(select(mc_augmented, H3K4me1:H3K4me3), G=5)
+summary(mod, parameters = TRUE)
+plot(mod, what = "classification")
+#
+
 
 
