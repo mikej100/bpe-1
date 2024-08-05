@@ -99,6 +99,7 @@ dependencies:
   - r-cli=3.6.3
   - r-clipr=0.8.0
   - r-colorspace=2.1_0
+  - r-config=0.3.2
   - r-cpp11=0.4.7
   - r-crayon=1.5.3
   - r-dplyr=1.1.4
@@ -143,6 +144,7 @@ dependencies:
   - r-viridislite=0.4.2
   - r-vroom=1.6.5
   - r-withr=3.0.0
+  - r-yaml=2.3.9
   - readline=8.2
   - sed=4.8
   - setuptools=70.2.0
